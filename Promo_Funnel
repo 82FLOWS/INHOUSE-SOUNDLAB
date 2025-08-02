@@ -1,0 +1,18 @@
+
+import streamlit as st
+import datetime
+
+st.title("Promo Funnel - INHOUSE SoundLab")
+st.image("../shared_assets/inhouse_logo1.png", width=200)
+st.markdown("### Welcome to the INHOUSE Promo Funnel!")
+
+if "Promo_Funnel" == "Promo_Funnel":
+    email = st.text_input("Enter your email to get the 'Welcome Home' INHOUSE Pack:")
+    if st.button("Submit"):
+        with open("../shared_assets/email_signups.csv", "a") as file:
+            file.write(f"{email},{datetime.datetime.now()}\n")
+        st.success("Thanks! Check your inbox for the pack soon.")
+else:
+    st.markdown("This is a starter template. Future functionality (AI hooks, melodies, etc.) will be added.")
+
+streamlit
