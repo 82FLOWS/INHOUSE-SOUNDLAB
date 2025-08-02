@@ -1,0 +1,8 @@
+email,timestamp
+{
+    "primary": "#1E3A8A",
+    "secondary": "#374151",
+    "accent": "#10B981",
+    "black": "#000000",
+    "white": "#FFFFFF"
+}
