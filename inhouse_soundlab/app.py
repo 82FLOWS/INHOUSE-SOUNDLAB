@@ -1,4 +1,4 @@
-e"""
+"""
 Main entry point for the INHOUSE SoundLab Streamlit app.
 
 This application bundles four tools:
