@@ -21,10 +21,51 @@ import numpy as np
 import streamlit as st
 
 # Determine the location of the shared assets folder relative to this file.
+import requests
+import soundfile as sf
 BASE_DIR = Path(__file__).resolve().parent
 ASSETS_DIR = BASE_DIR / "shared_assets"
 LOGO_PATH = ASSETS_DIR / "inhouse_logo.png"
 SIGNUPS_FILE = ASSETS_DIR / "email_signups.csv"
+# Predefined hip-hop sample URLs from public domain libraries
+HIPHOP_SAMPLES = {
+    # Drum one-shots
+    "Kick": "https://cdn.jsdelivr.net/gh/generative-music/public-domain-samples@main/drums/kick08.wav",
+    "Snare": "https://cdn.jsdelivr.net/gh/generative-music/public-domain-samples@main/drums/snare07.wav",
+    "Hi-hat": "https://cdn.jsdelivr.net/gh/generative-music/public-domain-samples@main/drums/hihat_closed_02.wav",
+    # Melody loops
+    "Melody": [
+        "https://cdn.jsdelivr.net/gh/generative-music/public-domain-samples@main/loops/piano_chop_01.wav",
+        "https://cdn.jsdelivr.net/gh/generative-music/public-domain-samples@main/loops/synth_pad_01.wav",
+        "https://cdn.jsdelivr.net/gh/generative-music/public-domain-samples@main/loops/guitar_riff_01.wav",
+    ],
+}
+
+# Dictionary to hold user-uploaded samples
+CUSTOM_SAMPLES = {}
+
+def load_sample(url: str):
+    """Download an audio file from a URL and return (samples, sample_rate)."""
+    resp = requests.get(url)
+    resp.raise_for_status()
+    data, sr = sf.read(io.BytesIO(resp.content), dtype='float32')
+    return data, sr
+
+def get_sample(name: str):
+    """Return a sample array and sample rate from user uploaded or default samples."""
+    # Check custom samples first
+    if name in CUSTOM_SAMPLES:
+        return CUSTOM_SAMPLES[name]
+    # For melody list, choose random
+    if name == "Melody":
+        import random
+        url = random.choice(HIPHOP_SAMPLES.get("Melody", []))
+        return load_sample(url)
+    url = HIPHOP_SAMPLES.get(name)
+    if url:
+        return load_sample(url)
+    return None, None
+
 
 def save_email(email: str) -> None:
     """Append an email and timestamp to the signups CSV."""
@@ -74,7 +115,11 @@ def _write_wav(samples: np.ndarray, sample_rate: int = 44100) -> bytes:
 def generate_melody_audio(melody: list[str], duration_per_note: float = 0.5) -> bytes:
     sample_rate = 44100
     audio_segments = []
-    for note in melody:
+    
+        data, sr = get_sample("Melody")
+    if data is not None:
+        return _write_wav(data, sr)
+for note in melody:
         freq = _note_to_frequency(note)
         audio_segments.append(_generate_sine_wave(freq, duration_per_note, sample_rate))
     full_audio = np.concatenate(audio_segments)
@@ -82,6 +127,31 @@ def generate_melody_audio(melody: list[str], duration_per_note: float = 0.5) -> 
 
 def generate_drum_audio(pattern: list[str], duration_per_beat: float = 0.25) -> bytes:
     sample_rate = 44100
+    # Try to use hip-hop drum samples if available
+    try:
+        sample_rate = 44100  # enforce 44.1kHz
+        segments_sample = []
+        for element in pattern:
+            data, sr = get_sample(element)
+            if data is None:
+                raise ValueError("No sample for" + element)
+            target_len = int(sample_rate * duration_per_beat)
+            # Resample if necessary using simple interpolation
+            if sr != sample_rate:
+                x_old = np.linspace(0, len(data), num=len(data))
+                x_new = np.linspace(0, len(data), num=target_len)
+                data = np.interp(x_new, x_old, data)
+            # Trim or pad the sample to match beat length
+            if len(data) > target_len:
+                data = data[:target_len]
+            else:
+                data = np.pad(data, (0, target_len - len(data)), 'constant')
+            segments_sample.append(data)
+        full_audio_sample = np.concatenate(segments_sample)
+        return _write_wav(full_audio_sample, sample_rate)
+    except Exception:
+        pass
+
     segments = []
     freq_map = {"Kick": 60.0, "Snare": 180.0, "Hi‑hat": 300.0}
     for element in pattern:
@@ -194,6 +264,41 @@ def promo_funnel() -> None:
 
 def main() -> None:
     st.set_page_config(page_title="INHOUSE SoundLab", page_icon="🎶", layout="centered")
+        # Apply hip-hop theme styling
+    st.markdown(
+        """
+        <style>
+        /* Hip-hop inspired vibrant colors and fonts */
+        body {
+            background-color: #1E90FF; /* electric blue */
+            col#FFFFFF;
+            font-family: 'Permanent Marker', sans-serif;
+        }
+        .stButton>button {
+            background-color: #FF4500;     /* orange */
+            color: #FFFFFF;    
+            border-radius: 6px;
+        }    
+            .stButton>button:hover {    
+            background-color: #8A2BE2; /*     purple */
+        }    
+        </style>    
+        """,    
+        unsafe_allow_html=True,
+    )
+
+    # Sidebar file uploader for user-provided samples
+    uploaded_files = st.sidebar.file_uploader(
+        "Upload your own audio samples", accept_multiple_files=True, type=["wav", "mp3", "ogg"]
+    )
+    if uploaded_files:
+        for file in uploaded_files:
+            data, sr = sf.read(file, dtype='float32')
+            CUSTOM_SAMPLES[file.name] = (data, sr)
+
+            
+
+
     if LOGO_PATH.exists():
         st.image(str(LOGO_PATH), width=200)
     st.title("INHOUSE SoundLab")
@@ -211,8 +316,9 @@ def main() -> None:
         melody_generator()
     elif page == "Drum Pattern Generator":
         drum_pattern_generator()
-    else:
-        promo_funnel()
-
-if __name__ == "__main__":
-    main()
+        else:
+            promo_funnel()
+    
+i    f __name__ == "__main__":
+        main()
+    
