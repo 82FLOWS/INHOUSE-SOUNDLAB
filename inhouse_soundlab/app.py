@@ -117,7 +117,7 @@ def generate_melody_audio(melody: list[str], duration_per_note: float = 0.5) -> 
     audio_segments = []
     
         data, sr = get_sample("Melody")
-    if data is not None:
+    i    if data is not None:
         return _write_wav(data, sr)
 for note in melody:
         freq = _note_to_frequency(note)
