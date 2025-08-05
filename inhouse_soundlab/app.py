@@ -115,9 +115,9 @@ def _write_wav(samples: np.ndarray, sample_rate: int = 44100) -> bytes:
 def generate_melody_audio(melody: list[str], duration_per_note: float = 0.5) -> bytes:
     sample_rate = 44100
     audio_segments = []
-     data, sr = get_sample("Melody")
-       if data is not None:
-        return _write_wav(data, sr)
+#     data, sr = get_sample("Melody")
+#       if data is not None:
+#        return _write_wav(data, sr)
 
  
         for note in melody:
