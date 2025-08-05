@@ -115,16 +115,17 @@ def _write_wav(samples: np.ndarray, sample_rate: int = 44100) -> bytes:
 def generate_melody_audio(melody: list[str], duration_per_note: float = 0.5) -> bytes:
     sample_rate = 44100
     audio_segments = []
-#     data, sr = get_sample("Melody")
-#       if data is not None:
-#        return _write_wav(data, sr)
+    # data, sr = get_sample("Melody")
+    # if data is not None:
+    #     return _write_wav(data, sr)
 
- 
-        for note in melody:
-    freq = _note_to_frequency(note)
+    for note in melody:
+        freq = _note_to_frequency(note)
         audio_segments.append(_generate_sine_wave(freq, duration_per_note, sample_rate))
+
     full_audio = np.concatenate(audio_segments)
     return _write_wav(full_audio, sample_rate)
+
 
 def generate_drum_audio(pattern: list[str], duration_per_beat: float = 0.25) -> bytes:
     sample_rate = 44100
